@@ -1,11 +1,15 @@
 {
   "buildCommand": "bun run build",
   "installCommand": "bun install",
-  "outputDirectory": ".vercel/output",
+  "outputDirectory": "dist/client",
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "https://<BACKEND_URL>/api/$1"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
