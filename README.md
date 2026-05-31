@@ -188,14 +188,3 @@ Content-Type: application/json
 ```json
 { "results": [...] }
 ```
-
----
-
-## Deploy Checklist
-
-- [ ] Nitro preset → `vercel`
-- [ ] `vercel.json` rewrite configured
-- [ ] Secrets added to Cloud Run / HF Spaces
-- [ ] `GREM_API_URL` set in Vercel dashboard
-- [ ] MongoDB Atlas IP allowlist updated
-- [ ] End-to-end `POST /api/infer` verified in production
