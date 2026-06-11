@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrainingRouteImport } from './routes/training'
 import { Route as InferenceRouteImport } from './routes/inference'
+import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TrainingRoute = TrainingRouteImport.update({
@@ -23,6 +24,11 @@ const InferenceRoute = InferenceRouteImport.update({
   path: '/inference',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ArchitectureRoute = ArchitectureRouteImport.update({
+  id: '/architecture',
+  path: '/architecture',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,30 +37,34 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/architecture': typeof ArchitectureRoute
   '/inference': typeof InferenceRoute
   '/training': typeof TrainingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/architecture': typeof ArchitectureRoute
   '/inference': typeof InferenceRoute
   '/training': typeof TrainingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/architecture': typeof ArchitectureRoute
   '/inference': typeof InferenceRoute
   '/training': typeof TrainingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/inference' | '/training'
+  fullPaths: '/' | '/architecture' | '/inference' | '/training'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/inference' | '/training'
-  id: '__root__' | '/' | '/inference' | '/training'
+  to: '/' | '/architecture' | '/inference' | '/training'
+  id: '__root__' | '/' | '/architecture' | '/inference' | '/training'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ArchitectureRoute: typeof ArchitectureRoute
   InferenceRoute: typeof InferenceRoute
   TrainingRoute: typeof TrainingRoute
 }
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InferenceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/architecture': {
+      id: '/architecture'
+      path: '/architecture'
+      fullPath: '/architecture'
+      preLoaderRoute: typeof ArchitectureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ArchitectureRoute: ArchitectureRoute,
   InferenceRoute: InferenceRoute,
   TrainingRoute: TrainingRoute,
 }

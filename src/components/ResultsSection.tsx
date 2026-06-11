@@ -1,23 +1,4 @@
-interface Metrics {
-  n_test_records: number;
-  bm25_hits_at_1: number;
-  reranker_hits_at_1: number;
-  reranker_hits_at_2: number;
-  reranker_recall_at_2: number;
-  reranker_mrr: number;
-  reranker_ndcg_at_2: number;
-  reranker_ndcg_at_5: number;
-  delta_hits_at_1: number;
-  ground_rate: number;
-  lucky_rate: number;
-  hint_invoked_count: number;
-  hint_invoked_rate: number;
-  failure_mode_recovery: {
-    distractor_confusion: { recovered: number; total: number; rate: number };
-    entity_drift: { recovered: number; total: number; rate: number };
-    chain_break: { recovered: number; total: number; rate: number };
-  };
-}
+import { type Metrics } from "@/hooks/useMetrics";
 
 interface ResultsSectionProps {
   metrics: Metrics | null;

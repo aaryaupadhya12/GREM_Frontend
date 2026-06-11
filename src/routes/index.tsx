@@ -1,30 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
 import { Nav } from "@/components/Nav";
 import { ResultsSection } from "@/components/ResultsSection";
 import { DemoTracesSection } from "@/components/DemoTracesSection";
 import { LiveAtlasFeed } from "@/components/LiveAtlasFeed";
-
-interface Metrics {
-  n_test_records: number;
-  bm25_hits_at_1: number;
-  reranker_hits_at_1: number;
-  reranker_hits_at_2: number;
-  reranker_recall_at_2: number;
-  reranker_mrr: number;
-  reranker_ndcg_at_2: number;
-  reranker_ndcg_at_5: number;
-  delta_hits_at_1: number;
-  ground_rate: number;
-  lucky_rate: number;
-  hint_invoked_count: number;
-  hint_invoked_rate: number;
-  failure_mode_recovery: {
-    distractor_confusion: { recovered: number; total: number; rate: number };
-    entity_drift: { recovered: number; total: number; rate: number };
-    chain_break: { recovered: number; total: number; rate: number };
-  };
-}
+import { useMetrics, type Metrics } from "@/hooks/useMetrics";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -37,20 +16,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const [metrics, setMetrics] = useState<Metrics | null>(null);
-  const [loadingMetrics, setLoadingMetrics] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/metrics")
-      .then((r) => r.json())
-      .then((result) => {
-        if (result.success && result.data) {
-          setMetrics(result.data);
-        }
-      })
-      .catch(console.error)
-      .finally(() => setLoadingMetrics(false));
-  }, []);
+  const { metrics, loading: loadingMetrics } = useMetrics();
 
   // Fallback metrics for error cases
   const fallbackMetrics: Metrics = {
