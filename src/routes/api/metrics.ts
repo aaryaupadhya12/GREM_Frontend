@@ -1,12 +1,12 @@
-import { createServerFn } from "@tanstack/react-start/server";
 import { getDb } from "@/lib/mongo";
 
-export const getMetrics = createServerFn({ method: "GET" }).handler(async () => {
+export default defineEventHandler(async (event) => {
   try {
     const db = await getDb();
     const metrics = await db.collection("final_metrics").findOne({});
 
     if (!metrics) {
+      setResponseStatus(event, 404);
       return {
         success: false,
         error: "No metrics found",
@@ -20,6 +20,7 @@ export const getMetrics = createServerFn({ method: "GET" }).handler(async () => 
     };
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    setResponseStatus(event, 500);
     return {
       success: false,
       error: errorMessage,
