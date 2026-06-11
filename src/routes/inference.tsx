@@ -267,7 +267,14 @@ export default function InferencePage() {
             </div>
             <div className="rounded-lg border p-4 bg-blue-50">
               <div className="text-xs text-muted-foreground">Rank Improvement</div>
-              <div className="mt-1 font-bold text-blue-700">{selectedTrace ? `+${(selectedTrace.bm25_first_gold - selectedTrace.grem_first_gold)} positions` : "—"}</div>
+              <div className="mt-1 font-bold text-blue-700">
+                {selectedTrace ? (() => {
+                  const improvement = selectedTrace.bm25_first_gold - selectedTrace.grem_first_gold;
+                  return improvement >= 0
+                    ? `+${improvement} positions`
+                    : `${improvement} positions`;
+                })() : "—"}
+              </div>
             </div>
             <div className="rounded-lg border p-4 bg-yellow-50">
               <div className="text-xs text-muted-foreground">Failure Mode</div>
