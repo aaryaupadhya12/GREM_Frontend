@@ -1,7 +1,7 @@
-import { cpSync, mkdirSync, writeFileSync, existsSync } from 'fs';
+import { cpSync, mkdirSync, writeFileSync, existsSync, rmSync } from 'fs';
 
 const out = '.vercel/output';
-if (existsSync(out)) { console.log('✓ already exists'); process.exit(0); }
+if (existsSync(out)) { rmSync(out, { recursive: true }); }
 
 mkdirSync(`${out}/static`, { recursive: true });
 mkdirSync(`${out}/functions/index.func`, { recursive: true });
