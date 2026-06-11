@@ -2,16 +2,6 @@
   "buildCommand": "bun run build && node scripts/prepare-vercel.mjs",
   "installCommand": "bun install",
   "outputDirectory": "dist/client",
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "https://<BACKEND_URL>/api/$1"
-    },
-    {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
-    }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",
