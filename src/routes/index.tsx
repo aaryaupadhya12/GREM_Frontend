@@ -129,7 +129,7 @@ function Index() {
         </div>
 
         {/* Results section */}
-        <ResultsSection metrics={metrics} />
+        <ResultsSection metrics={displayMetrics} />
 
         {/* Demo traces section */}
         <DemoTracesSection />

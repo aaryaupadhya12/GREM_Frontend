@@ -15,17 +15,29 @@ const failureModeColors: Record<string, { bg: string; text: string }> = {
 export function LiveAtlasFeed() {
   const [chains, setChains] = useState<Chain[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let mounted = true;
     fetch("/api/recent-chains")
       .then((r) => r.json())
       .then((result) => {
-        if (result.success) {
-          setChains(result.data);
+        if (!mounted) return;
+        if (!result || !result.success) {
+          setError(result?.error || "Unable to fetch verified chains.");
+          setChains([]);
+          return;
         }
+        setChains(result.data || []);
       })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        console.error(err);
+        if (mounted) setError("Unable to fetch verified chains.");
+      })
+      .finally(() => mounted && setLoading(false));
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (loading) {
@@ -34,10 +46,7 @@ export function LiveAtlasFeed() {
         <h2 className="text-3xl font-bold md:text-4xl">Live From MongoDB Atlas</h2>
         <div className="mt-8 space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className="h-24 bg-gray-200 rounded-xl animate-pulse"
-            />
+            <div key={i} className="h-24 bg-gray-200 rounded-xl animate-pulse" />
           ))}
         </div>
       </section>
@@ -49,16 +58,23 @@ export function LiveAtlasFeed() {
       <div className="flex items-center gap-3 mb-8">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-xs font-semibold text-muted-foreground">
-            Live • Updated from Atlas
-          </span>
+          <span className="text-xs font-semibold text-muted-foreground">Live • Updated from Atlas</span>
         </div>
       </div>
 
-      <h2 className="text-3xl font-bold md:text-4xl mb-8">Verified Reasoning Chains</h2>
+      <h2 className="text-3xl font-bold md:text-4xl mb-4">Verified Reasoning Chains</h2>
+      <p className="text-muted-foreground mb-8">Recent verified chains replayed from MongoDB Atlas cache.</p>
 
-      {chains.length === 0 ? (
-        <p className="text-muted-foreground">No verified chains available</p>
+      {error ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">
+          <p className="font-semibold">{error}</p>
+          <p className="mt-2 text-sm">Check your MongoDB Atlas connection or precompute the chain cache for demo data.</p>
+        </div>
+      ) : chains.length === 0 ? (
+        <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-6">
+          <p className="font-semibold">No verified chains available.</p>
+          <p className="mt-2 text-sm">Run the Atlas cache loader or verify that the `recent-chains` API is reachable.</p>
+        </div>
       ) : (
         <div className="grid gap-4 auto-rows-max">
           {chains.map((chain, idx) => {
@@ -75,21 +91,15 @@ export function LiveAtlasFeed() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-muted-foreground line-clamp-2">
-                      {chain.query.length > 120
-                        ? chain.query.substring(0, 120) + "..."
-                        : chain.query}
+                      {chain.query.length > 120 ? `${chain.query.substring(0, 120)}...` : chain.query}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${colors.bg} ${colors.text}`}
-                    >
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${colors.bg} ${colors.text}`}>
                       {chain.failure_mode.replace(/_/g, " ")}
                     </span>
-                    <span className="text-sm font-semibold text-google-blue">
-                      {(chain.q_final * 100).toFixed(1)}%
-                    </span>
+                    <span className="text-sm font-semibold text-google-blue">{(chain.q_final * 100).toFixed(1)}%</span>
                   </div>
                 </div>
               </div>
