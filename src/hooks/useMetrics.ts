@@ -46,9 +46,14 @@ export function useMetrics() {
         }
         return res.json();
       })
-      .then((payload) => {
-        if (!payload || payload.error) {
-          throw new Error(payload?.error || "Invalid metrics response");
+      .then((response) => {
+        if (!response || response.error) {
+          throw new Error(response?.error || "Invalid metrics response");
+        }
+        // Handle both wrapped { success, data } and direct metric responses
+        const payload = response.data || response;
+        if (!payload || typeof payload !== 'object') {
+          throw new Error("Invalid metrics data");
         }
         cachedMetrics = payload as Metrics;
         setMetrics(cachedMetrics);
