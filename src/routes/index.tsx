@@ -1,5 +1,30 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
 import { Nav } from "@/components/Nav";
+import { ResultsSection } from "@/components/ResultsSection";
+import { DemoTracesSection } from "@/components/DemoTracesSection";
+import { LiveAtlasFeed } from "@/components/LiveAtlasFeed";
+
+interface Metrics {
+  n_test_records: number;
+  bm25_hits_at_1: number;
+  reranker_hits_at_1: number;
+  reranker_hits_at_2: number;
+  reranker_recall_at_2: number;
+  reranker_mrr: number;
+  reranker_ndcg_at_2: number;
+  reranker_ndcg_at_5: number;
+  delta_hits_at_1: number;
+  ground_rate: number;
+  lucky_rate: number;
+  hint_invoked_count: number;
+  hint_invoked_rate: number;
+  failure_mode_recovery: {
+    distractor_confusion: { recovered: number; total: number; rate: number };
+    entity_drift: { recovered: number; total: number; rate: number };
+    chain_break: { recovered: number; total: number; rate: number };
+  };
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -12,10 +37,49 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [loadingMetrics, setLoadingMetrics] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/metrics")
+      .then((r) => r.json())
+      .then((result) => {
+        if (result.success && result.data) {
+          setMetrics(result.data);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoadingMetrics(false));
+  }, []);
+
+  // Fallback metrics for error cases
+  const fallbackMetrics: Metrics = {
+    n_test_records: 228,
+    bm25_hits_at_1: 0.0,
+    reranker_hits_at_1: 0.8026,
+    reranker_hits_at_2: 0.9254,
+    reranker_recall_at_2: 0.7061,
+    reranker_mrr: 0.8851,
+    reranker_ndcg_at_2: 0.728,
+    reranker_ndcg_at_5: 0.8475,
+    delta_hits_at_1: 0.8026,
+    ground_rate: 1.0,
+    lucky_rate: 0.0,
+    hint_invoked_count: 11,
+    hint_invoked_rate: 0.048,
+    failure_mode_recovery: {
+      distractor_confusion: { recovered: 64, total: 79, rate: 0.81 },
+      entity_drift: { recovered: 103, total: 130, rate: 0.792 },
+      chain_break: { recovered: 16, total: 19, rate: 0.842 },
+    },
+  };
+
+  const displayMetrics = metrics || fallbackMetrics;
+
   return (
     <div className="min-h-screen">
       <Nav />
-      <main className="mx-auto max-w-6xl px-6 py-16">
+      <main className="mx-auto max-w-7xl px-4 py-16">
         <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
           <span className="rounded-full border border-google-blue/30 bg-google-blue/5 px-3 py-1 text-google-blue">Google Cloud</span>
           <span className="rounded-full border border-mongo-green/30 bg-mongo-green/5 px-3 py-1 text-mongo-green">MongoDB Atlas</span>
@@ -32,12 +96,46 @@ function Index() {
           aggregation, and distilled cross-encoder reranking — backed by MongoDB Atlas vector memory.
         </p>
 
-        <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <Stat label="New Hits@1" value="0.8745" color="blue" />
-          <Stat label="nDCG@10" value="0.8421" color="yellow" />
-          <Stat label="Recall@2" value="0.7912" color="red" />
-          <Stat label="Recovery Rate" value="93.4%" sub="vs DCG & BM25" color="green" />
+        {/* Hero metric cards */}
+        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <HeroCard
+            label="RECOVERY"
+            value={(displayMetrics.reranker_hits_at_1 * 100).toFixed(1) + "%"}
+            subtext="queries BM25 lost"
+            color="blue"
+            loading={loadingMetrics}
+          />
+          <HeroCard
+            label="CHEAPER"
+            value="1000×"
+            subtext="than LLM re-ranking"
+            color="green"
+            loading={loadingMetrics}
+          />
+          <HeroCard
+            label="LATENCY"
+            value="2 ms"
+            subtext="vs 2 s for LLM"
+            color="yellow"
+            loading={loadingMetrics}
+          />
+          <HeroCard
+            label="PER QUERY"
+            value="$0.000003"
+            subtext="at production scale"
+            color="red"
+            loading={loadingMetrics}
+          />
         </div>
+
+        {/* Results section */}
+        <ResultsSection metrics={metrics} />
+
+        {/* Demo traces section */}
+        <DemoTracesSection />
+
+        {/* Live feed section */}
+        <LiveAtlasFeed />
 
         <div className="mt-12 grid gap-6 md:grid-cols-2">
           <Link
@@ -74,18 +172,38 @@ function Index() {
   );
 }
 
-function Stat({ label, value, sub, color }: { label: string; value: string; sub?: string; color: "blue" | "red" | "yellow" | "green" }) {
-  const c = {
-    blue: "text-google-blue",
-    red: "text-google-red",
-    yellow: "text-google-yellow",
-    green: "text-mongo-green",
-  }[color];
+interface HeroCardProps {
+  label: string;
+  value: string;
+  subtext: string;
+  color: "blue" | "red" | "yellow" | "green";
+  loading: boolean;
+}
+
+function HeroCard({ label, value, subtext, color, loading }: HeroCardProps) {
+  const colorMap = {
+    blue: "text-google-blue border-google-blue/20 bg-google-blue/5",
+    red: "text-google-red border-google-red/20 bg-google-red/5",
+    yellow: "text-google-yellow border-google-yellow/20 bg-google-yellow/5",
+    green: "text-mongo-green border-mongo-green/20 bg-mongo-green/5",
+  };
+
+  if (loading) {
+    return (
+      <div className={`rounded-2xl border-2 p-6 ${colorMap[color]}`}>
+        <div className="h-8 bg-gray-200 rounded animate-pulse mb-3" />
+        <div className="h-4 bg-gray-200 rounded animate-pulse" />
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-xl border bg-card p-4">
-      <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className={`mt-1 text-2xl font-bold tabular-nums ${c}`}>{value}</div>
-      {sub && <div className="mt-1 text-[10px] text-muted-foreground">{sub}</div>}
+    <div className={`rounded-2xl border-2 p-6 ${colorMap[color]}`}>
+      <div className={`text-4xl font-bold tabular-nums ${colorMap[color].split(" ")[0]}`}>
+        {value}
+      </div>
+      <div className="mt-2 text-sm font-semibold uppercase tracking-wider">{label}</div>
+      <div className="mt-1 text-xs text-muted-foreground">{subtext}</div>
     </div>
   );
 }
